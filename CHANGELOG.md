@@ -1,3 +1,11 @@
+## [0.2.0] - 2026-09-04
+
+- chore: raise `latlong2` to `^0.10.1` (was `^0.9.1`) and `flutter_lints` to `^6.0.0` (was `^4.0.0`),
+  in both the package and the example. No source changes were needed for either — `dart analyze`
+  and the full test suite stay clean; latlong2 0.10's changes (an improved `LatLng.hashCode`, a new
+  `isValid` getter, safer `fromJson` parsing) are all additive/non-breaking for how this package uses
+  `LatLng`.
+
 ## [0.1.0] - 2026-09-04 (fork)
 
 First release of this fork, [flutter_map_cluster](https://github.com/kolega69/flutter_map_cluster),
