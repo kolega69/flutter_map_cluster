@@ -1,25 +1,25 @@
-# Flutter Map Marker Cluster
+# Flutter Map Cluster
 
-[![pub package](https://img.shields.io/pub/v/flutter_map_marker_cluster.svg)](https://pub.dartlang.org/packages/flutter_map_marker_cluster) ![travis](https://api.travis-ci.com/lpongetti/flutter_map_marker_cluster.svg?branch=master)
+[![pub package](https://img.shields.io/pub/v/flutter_map_cluster.svg)](https://pub.dev/packages/flutter_map_cluster)
 
 A Dart implementation of Leaflet.markercluster for Flutter apps.
-This is a plugin for [flutter_map](https://github.com/johnpryan/flutter_map) package
+This is a plugin for [flutter_map](https://github.com/fleaflet/flutter_map) package.
 
-<div style="text-align: center"><table><tr>
-  <td style="text-align: center">
-  <a href="https://github.com/lpongetti/flutter_map_marker_cluster/blob/master/example.gif">
-    <img src="https://github.com/lpongetti/flutter_map_marker_cluster/blob/master/example.gif" width="200"/></a>
-</td>
-</tr></table></div>
+> **This is a fork** of [`flutter_map_marker_cluster`](https://github.com/lpongetti/flutter_map_marker_cluster)
+> by [Lorenzo Pongetti](https://github.com/lpongetti) — nearly all of the clustering, spiderfy and
+> animation logic here is his work. This fork fixes a fold/unfold tap bug, avoids unnecessary
+> rebuilds, and adds a `MarkerClusterController` for programmatically folding an open cluster. See
+> [What's different from upstream](#whats-different-from-upstream) below, and please consider
+> [supporting the original author](#supporting-the-original-author).
 
 ## Usage
 
-Add flutter_map and  flutter_map_marker_cluster to your pubspec:
+Add flutter_map and flutter_map_cluster to your pubspec:
 
 ```yaml
 dependencies:
   flutter_map: any
-  flutter_map_marker_cluster: any # or the latest version on Pub
+  flutter_map_cluster: any # or the latest version on Pub
 ```
 
 [flutter_map](https://github.com/fleaflet/flutter_map/releases) package removed old layering system with v3.0.0 use `MarkerClusterLayerWidget` as member of `children` parameter list and configure it using `MarkerClusterLayerOptions`.
@@ -74,11 +74,32 @@ dependencies:
 
 See the `example/` folder for a working example app.
 
-## Supporting Me
+## What's different from upstream
 
-A donation through my Ko-Fi page would be infinitly appriciated:
+- **Fold/unfold tap bug fixed** — tapping a spiderfied cluster to close it, then tapping it again to
+  reopen, no longer occasionally auto-unfolds itself. The cause was `_onClusterTap` comparing the
+  tapped `MarkerClusterNode` to the currently-open one by object identity (`==`) instead of using
+  the existing `_isSpiderfyCluster` bounds-based check the class already defines elsewhere — a rebuild
+  can hand `_onClusterTap` a structurally-equal-but-not-identical node, so the identity check silently
+  failed to recognize "this is the cluster that's already open."
+- **Avoids unnecessary rebuilds** — `didUpdateWidget` used to rebuild the entire cluster tree whenever
+  `oldWidget.options.markers != widget.options.markers`, which is `List<Marker>` reference inequality —
+  true on every rebuild that passes a freshly-built marker list, even with identical content. It now
+  compares by each marker's `Key` (`markersChanged` in `marker_diff.dart`), so an unrelated parent
+  rebuild (e.g. picking a different marker for a popup) doesn't tear down and rebuild every
+  cluster/spiderfy in flight.
+- **`MarkerClusterController`** — an optional `controller:` on `MarkerClusterLayerOptions` that lets
+  app code programmatically fold whichever cluster is currently spiderfied (e.g. when the user taps
+  the map background, or a different, non-clustered marker), and query `isSpiderfied(LatLng)` to tell
+  "tapped one of the fanned-out siblings" apart from "tapped something else."
+
+## Supporting the Original Author
+
+This fork builds on Lorenzo Pongetti's work. If it's useful to you, please support **him**, the
+original author:
+
+A donation through his Ko-Fi page would be infinitly appriciated:
 [![ko-fi](https://ko-fi.com/img/githubbutton_sm.svg)](https://ko-fi.com/lorenzopongetti)
 
-but, if you can't or won't, a star on GitHub and a like on pub.dev would also go a long way!
-
-Every donation gives me fuel to continue my open-source projects and lets me know that I'm doing a good job.
+but, if you can't or won't, a star on [his GitHub repo](https://github.com/lpongetti/flutter_map_marker_cluster)
+and a like on [his pub.dev package](https://pub.dev/packages/flutter_map_marker_cluster) would also go a long way!

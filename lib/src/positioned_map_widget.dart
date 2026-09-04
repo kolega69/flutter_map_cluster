@@ -1,6 +1,6 @@
 import 'package:flutter/widgets.dart';
-import 'package:flutter_map_marker_cluster/src/map_widget.dart';
-import 'package:flutter_map_marker_cluster/src/rotate.dart';
+import 'package:flutter_map_cluster/src/map_widget.dart';
+import 'package:flutter_map_cluster/src/rotate.dart';
 
 class PositionedMapWidget extends MapWidget {
   final Size size;

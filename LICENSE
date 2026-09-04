@@ -24,4 +24,12 @@ DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR
 SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER
 CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY,
 OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
-OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE
+OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+
+---
+
+This package is a fork of flutter_map_marker_cluster
+(https://github.com/lpongetti/flutter_map_marker_cluster), version 8.2.2, under the license
+above. Modifications: fixed a cluster-identity comparison bug in the spiderfy tap-toggle logic,
+made the cluster-tree rebuild guard content-aware (keyed on Marker.key instead of list identity),
+and added MarkerClusterController for programmatic fold. See README.md for details.

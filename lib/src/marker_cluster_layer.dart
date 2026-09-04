@@ -1,18 +1,19 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_map/flutter_map.dart';
-import 'package:flutter_map_marker_cluster/flutter_map_marker_cluster.dart';
-import 'package:flutter_map_marker_cluster/src/cluster_manager.dart';
-import 'package:flutter_map_marker_cluster/src/cluster_widget.dart';
-import 'package:flutter_map_marker_cluster/src/core/quick_hull.dart';
-import 'package:flutter_map_marker_cluster/src/core/spiderfy.dart';
-import 'package:flutter_map_marker_cluster/src/fade.dart';
-import 'package:flutter_map_marker_cluster/src/map_calculator.dart';
-import 'package:flutter_map_marker_cluster/src/map_widget.dart';
-import 'package:flutter_map_marker_cluster/src/marker_widget.dart';
-import 'package:flutter_map_marker_cluster/src/node/marker_node.dart';
-import 'package:flutter_map_marker_cluster/src/node/marker_or_cluster_node.dart';
-import 'package:flutter_map_marker_cluster/src/rotate.dart';
-import 'package:flutter_map_marker_cluster/src/translate.dart';
+import 'package:flutter_map_cluster/flutter_map_cluster.dart';
+import 'package:flutter_map_cluster/src/cluster_manager.dart';
+import 'package:flutter_map_cluster/src/cluster_widget.dart';
+import 'package:flutter_map_cluster/src/core/quick_hull.dart';
+import 'package:flutter_map_cluster/src/core/spiderfy.dart';
+import 'package:flutter_map_cluster/src/fade.dart';
+import 'package:flutter_map_cluster/src/map_calculator.dart';
+import 'package:flutter_map_cluster/src/map_widget.dart';
+import 'package:flutter_map_cluster/src/marker_diff.dart';
+import 'package:flutter_map_cluster/src/marker_widget.dart';
+import 'package:flutter_map_cluster/src/node/marker_node.dart';
+import 'package:flutter_map_cluster/src/node/marker_or_cluster_node.dart';
+import 'package:flutter_map_cluster/src/rotate.dart';
+import 'package:flutter_map_cluster/src/translate.dart';
 import 'package:latlong2/latlong.dart';
 
 class MarkerClusterLayer extends StatefulWidget {
@@ -79,6 +80,7 @@ class _MarkerClusterLayerState extends State<MarkerClusterLayer>
     _initializeAnimationControllers();
     _initializeClusterManager();
     _addLayers();
+    widget.options.controller?.attach(_foldClusters, _isPointSpiderfied);
 
     _zoomController.forward();
     super.initState();
@@ -112,17 +114,22 @@ class _MarkerClusterLayerState extends State<MarkerClusterLayer>
     _fitBoundController.dispose();
     _centerMarkerController.dispose();
     _spiderfyController.dispose();
+    widget.options.controller?.detach();
     super.dispose();
   }
 
   @override
   void didUpdateWidget(MarkerClusterLayer oldWidget) {
-    if (oldWidget.options.markers != widget.options.markers) {
+    if (markersChanged(oldWidget.options.markers, widget.options.markers)) {
       _initializeClusterManager();
       _addLayers();
     }
     if (oldWidget.mapCamera.pixelOrigin != widget.mapCamera.pixelOrigin) {
       _mapCalculator = MapCalculator(widget.mapCamera);
+    }
+    if (oldWidget.options.controller != widget.options.controller) {
+      oldWidget.options.controller?.detach();
+      widget.options.controller?.attach(_foldClusters, _isPointSpiderfied);
     }
     super.didUpdateWidget(oldWidget);
   }
@@ -294,6 +301,32 @@ class _MarkerClusterLayerState extends State<MarkerClusterLayer>
         break;
     }
   }
+
+  /// Attached to [MarkerClusterLayerOptions.controller] so app code can
+  /// collapse whichever cluster is currently open.
+  ///
+  /// Only acts once the spiderfy has fully finished opening. A tap that
+  /// opens a cluster can trigger app-side side effects (e.g. a listener
+  /// reacting to a state change from [MarkerClusterLayerOptions.onClusterTap])
+  /// on a later microtask — landing here while `_spiderfy`'s forward
+  /// animation, started synchronously by that same tap, is still in flight.
+  /// Folding at that moment would immediately reverse the very animation
+  /// the tap just started. A fold request arriving mid-open is simply not
+  /// acted on — the far more common real trigger for a fold (tapping
+  /// something else entirely) never races an in-flight open.
+  void _foldClusters() {
+    if (spiderfyCluster != null &&
+        _spiderfyController.status == AnimationStatus.completed) {
+      _unspiderfy();
+    }
+  }
+
+  /// Attached to [MarkerClusterLayerOptions.controller] alongside
+  /// [_foldClusters] so app code can tell whether a point it just handled
+  /// (e.g. a marker tap) is one of the siblings the currently-open spiderfy
+  /// fanned out — and therefore shouldn't itself trigger a fold.
+  bool _isPointSpiderfied(LatLng point) =>
+      spiderfyCluster?.markers.any((m) => m.point == point) ?? false;
 
   void _addMarkerLayer(MarkerNode markerNode, List<Widget> layers) {
     if (_zoomingIn && markerNode.parent!.zoom == _previousZoom) {
@@ -628,7 +661,7 @@ class _MarkerClusterLayerState extends State<MarkerClusterLayer>
       if (!widget.options.zoomToBoundsOnClick) {
         if (widget.options.spiderfyCluster) {
           if (spiderfyCluster != null) {
-            if (spiderfyCluster == cluster) {
+            if (_isSpiderfyCluster(cluster)) {
               _unspiderfy();
               return;
             } else {
@@ -669,7 +702,7 @@ class _MarkerClusterLayerState extends State<MarkerClusterLayer>
             nonRotatedSize: dest.nonRotatedSize);
 
         if (spiderfyCluster != null) {
-          if (spiderfyCluster == cluster) {
+          if (_isSpiderfyCluster(cluster)) {
             _unspiderfy();
             return;
           } else {
