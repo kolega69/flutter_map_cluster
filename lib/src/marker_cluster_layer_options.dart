@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_map/flutter_map.dart';
-import 'package:flutter_map_marker_cluster/flutter_map_marker_cluster.dart';
+import 'package:flutter_map_cluster/flutter_map_cluster.dart';
 import 'package:flutter_map_marker_popup/extension_api.dart';
 
 class PolygonOptions {
@@ -180,6 +180,10 @@ class MarkerClusterLayerOptions {
   /// Popup's options that show when tapping markers or via the PopupController.
   final PopupOptions? popupOptions;
 
+  /// Lets app code programmatically fold whichever cluster is currently
+  /// spiderfied — see [MarkerClusterController].
+  final MarkerClusterController? controller;
+
   final EdgeInsets padding;
   final double maxZoom;
   final bool inside;
@@ -219,6 +223,7 @@ class MarkerClusterLayerOptions {
     this.onClusterTap,
     this.onMarkersClustered,
     this.popupOptions,
+    this.controller,
     this.markerChildBehavior = false,
   });
 }

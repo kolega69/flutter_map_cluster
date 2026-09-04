@@ -1,3 +1,22 @@
+## [0.1.0] - 2026-09-04 (fork)
+
+First release of this fork, [flutter_map_cluster](https://github.com/kolega69/flutter_map_cluster),
+forked from [flutter_map_marker_cluster](https://github.com/lpongetti/flutter_map_marker_cluster)
+v8.2.2 by Lorenzo Pongetti.
+
+- fix: cluster fold/unfold tap bug — re-tapping an open cluster to close it, then tapping it again to
+  reopen, no longer occasionally auto-unfolds itself. `_onClusterTap` now uses the class's existing
+  `_isSpiderfyCluster` bounds-based check instead of comparing `MarkerClusterNode`s by identity.
+- fix: avoid unnecessary full cluster-tree rebuilds — `didUpdateWidget` now compares markers by
+  `Marker.key` (`markersChanged`) instead of `List` reference inequality, so an unrelated parent
+  rebuild no longer tears down and rebuilds every cluster/spiderfy in flight.
+- feat: `MarkerClusterController` — an optional `controller:` on `MarkerClusterLayerOptions` that lets
+  app code fold whichever cluster is currently spiderfied, and query `isSpiderfied(LatLng)`.
+
+---
+
+Changelog entries below this line are inherited from the upstream project this was forked from.
+
 ## [8.2.2] - 23/09/2025
 
 - Merge pull request #239 from MaximeRougieux/master
