@@ -1,4 +1,4 @@
-## [Unreleased]
+## [0.2.1] - 2026-11-05
 
 - fix: `Null check operator used on a null value` in `_addMarkerClusterLayer` when the camera zooms
   in from below the layer's minimum zoom. Without `MapOptions.minZoom` the layer's minimum is 1, but
