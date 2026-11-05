@@ -62,6 +62,18 @@ class _MarkerClusterLayerState extends State<MarkerClusterLayer>
       _centerMarkerController.isAnimating ||
       _spiderfyController.isAnimating;
 
+  /// The camera's zoom as a cluster level, never below [_minZoom].
+  ///
+  /// The cluster tree is built for the levels [_minZoom] to [_maxZoom] under a
+  /// parentless root at `_minZoom - 1`, which must never be drawn.
+  /// `MapOptions.minZoom` is optional, and without it the camera can sit below
+  /// [_minZoom], where the root would be drawn as a cluster and then throw
+  /// because it has no parent to animate from.
+  int get _cameraZoomLevel {
+    final zoom = widget.mapCamera.zoom.ceil();
+    return zoom < _minZoom ? _minZoom : zoom;
+  }
+
   bool get _zoomingIn =>
       _zoomController.isAnimating && _currentZoom > _previousZoom;
 
@@ -72,10 +84,10 @@ class _MarkerClusterLayerState extends State<MarkerClusterLayer>
   void initState() {
     _mapCalculator = MapCalculator(widget.mapCamera);
 
-    _currentZoom = _previousZoom = widget.mapCamera.zoom.ceil();
     _previousZoomDouble = widget.mapCamera.zoom;
     _minZoom = widget.mapCamera.minZoom?.ceil() ?? 1;
     _maxZoom = widget.mapCamera.maxZoom?.floor() ?? 20;
+    _currentZoom = _previousZoom = _cameraZoomLevel;
     _previousZoomDouble = widget.mapCamera.zoom;
     _initializeAnimationControllers();
     _initializeClusterManager();
@@ -591,7 +603,7 @@ class _MarkerClusterLayerState extends State<MarkerClusterLayer>
       _unspiderfy();
     }
 
-    final zoom = widget.mapCamera.zoom.ceil();
+    final zoom = _cameraZoomLevel;
     final layers = <Widget>[];
     final spiderfyLayers = <Widget>[];
 
