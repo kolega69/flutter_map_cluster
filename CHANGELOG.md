@@ -1,3 +1,11 @@
+## [0.2.1] - 2026-11-05
+
+- fix: `Null check operator used on a null value` in `_addMarkerClusterLayer` when the camera zooms
+  in from below the layer's minimum zoom. Without `MapOptions.minZoom` the layer's minimum is 1, but
+  flutter_map lets the camera go lower, so the parentless root of the cluster tree (at
+  `minZoom - 1`) was drawn as a cluster and its missing `parent` was dereferenced. The layer's zoom
+  level is now held at its minimum, which also stops every marker being drawn unclustered below it.
+
 ## [0.2.0] - 2026-09-04
 
 - chore: raise `latlong2` to `^0.10.1` (was `^0.9.1`) and `flutter_lints` to `^6.0.0` (was `^4.0.0`),
